@@ -1,0 +1,9 @@
+name: wMurderMystery
+main: me.wolf.wmurdermystery.MurderMysteryPlugin
+version: 1.0.0
+description: A Murder Mystery minigame
+author: ${project.author}
+api-version: 1.13
+
+
+

@@ -1,0 +1,31 @@
+shop-effects:
+  '1':
+    type: SPEED
+    amplifier: 1
+    duration: 10
+    enabled: true
+  '2':
+    type: SLOW
+    amplifier: 2
+    duration: 4
+    enabled: true
+  '3':
+    type: BLINDNESS
+    amplifier: 2
+    duration: 8
+    enabled: true
+  '4':
+    type: GLOWING
+    amplifier: 1
+    duration: 3
+    enabled: true
+  '5':
+    type: JUMP
+    amplifier: 2
+    duration: 7
+    enabled: true
+  '6':
+    type: CONFUSION
+    amplifier: 2
+    duration: 5
+    enabled: true
