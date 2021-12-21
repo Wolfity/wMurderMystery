@@ -326,7 +326,6 @@ public class GameManager {
     }
 
     private void spawnShopNPCs(final Arena arena) {
-        /*arena.getShopNPCLocations().forEach(location -> new NPCShop_v_1_16_R3(location.toBukkitLocation()));*/
         arena.getShopNPCLocations().forEach(location -> plugin.getiShopNPC().spawnShopNPC(location.toBukkitLocation()));
 
     }
@@ -353,18 +352,14 @@ public class GameManager {
 
     }
 
-    public GameState getGameState() {
-        return gameState;
-    }
-
-    public void giveLobbyInventory(final Player player) {
+     private void giveLobbyInventory(final Player player) {
         player.getInventory().clear();
         player.setHealth(20);
         player.setFoodLevel(20);
     }
 
     // give the game inventory to the murderer and detective
-    public void giveGameInventory(final Player player) {
+    private void giveGameInventory(final Player player) {
         player.setHealth(20);
         player.setFoodLevel(20);
 

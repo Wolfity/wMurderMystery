@@ -38,8 +38,6 @@ public class MurderMysteryCommand extends BaseCommand {
                     tell("&bPlease specify an arena!");
                 }
                 if (args[0].equalsIgnoreCase("admin")) {
-                    plugin.getiShopNPC().spawnShopNPC(player.getLocation());
-                    player.sendMessage("afterrrrrr");
                     tell(Messages.ADMIN_HELP);
                 } else if (args[0].equalsIgnoreCase("setworldspawn")) {
                     plugin.getConfig().set("WorldSpawn", player.getLocation());
