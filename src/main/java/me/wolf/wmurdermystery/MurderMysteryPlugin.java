@@ -10,6 +10,7 @@ import me.wolf.wmurdermystery.listeners.*;
 import me.wolf.wmurdermystery.player.MMPlayer;
 import me.wolf.wmurdermystery.scoreboard.Scoreboards;
 import me.wolf.wmurdermystery.shop.IShopNPC;
+import me.wolf.wmurdermystery.shop.ShopEffectManager;
 import me.wolf.wmurdermystery.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -28,6 +29,7 @@ public class MurderMysteryPlugin extends JavaPlugin {
     private GameManager gameManager;
     private Scoreboards scoreboard;
     private FileManager fileManager;
+    private ShopEffectManager shopEffectManager;
     private IShopNPC iShopNPC;
 
     private final Set<Arena> arenas = new HashSet<>();
@@ -91,7 +93,8 @@ public class MurderMysteryPlugin extends JavaPlugin {
         this.arenaManager.loadArenas();
         this.gameManager = new GameManager(this);
         this.scoreboard = new Scoreboards(this);
-
+        this.shopEffectManager = new ShopEffectManager(this);
+        shopEffectManager.loadEffects();
 
     }
 
@@ -136,6 +139,9 @@ public class MurderMysteryPlugin extends JavaPlugin {
         return iShopNPC;
     }
 
+    public ShopEffectManager getShopEffectManager() {
+        return shopEffectManager;
+    }
 
     private boolean loadNMS() {
         final String version = getServer().getClass().getPackage().getName().split("\\.")[3];

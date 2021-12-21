@@ -193,8 +193,7 @@ public class GameListeners implements Listener {
 
     // looping over the List<ShopEffects> to apply a random effect
     private void applyRandomEffect(final Player player) {
-        final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
-        final List<ShopEffect> activeEffects = mmPlayer.getShopEffectList().stream().filter(ShopEffect::isEnabled).collect(Collectors.toList());
+        final List<ShopEffect> activeEffects = plugin.getShopEffectManager().getShopEffects().stream().filter(ShopEffect::isEnabled).collect(Collectors.toList());
         final int randomIndex = new Random().nextInt(activeEffects.size());
         final ShopEffect effect = activeEffects.get(randomIndex);
         player.addPotionEffect(new PotionEffect(effect.getEffect(), effect.getDuration() * 20, effect.getAmplifier()));

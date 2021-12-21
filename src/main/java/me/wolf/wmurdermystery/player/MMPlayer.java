@@ -2,16 +2,11 @@ package me.wolf.wmurdermystery.player;
 
 import me.wolf.wmurdermystery.MurderMysteryPlugin;
 import me.wolf.wmurdermystery.role.Role;
-import me.wolf.wmurdermystery.shop.ShopEffect;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.potion.PotionEffectType;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-@SuppressWarnings("ConstantConditions")
+
 public class MMPlayer {
 
     private final MurderMysteryPlugin plugin;
@@ -20,7 +15,6 @@ public class MMPlayer {
     private int kills;
     private boolean isSpectator;
     private Role role;
-    private final List<ShopEffect> shopEffectList;
     private UUID killer;
 
 
@@ -30,18 +24,7 @@ public class MMPlayer {
         this.uuid = uuid;
         this.kills = 0;
         this.isSpectator = false;
-        this.shopEffectList = new ArrayList<>();
 
-
-        final FileConfiguration effectCfg = plugin.getFileManager().getShopEffectsConfig().getConfig();
-        for (final String effect : effectCfg.getConfigurationSection("shop-effects").getKeys(false)) {
-             final int duration = effectCfg.getInt("shop-effects." + effect + ".duration");
-             final int amplifier = effectCfg.getInt("shop-effects." + effect + ".amplifier") - 1;
-             final boolean enabled = effectCfg.getBoolean("shop-effects." + effect + ".enabled");
-             final String type = effectCfg.getString("shop-effects." + effect + ".type");
-
-             shopEffectList.add(new ShopEffect(PotionEffectType.getByName(type), duration, amplifier, enabled));
-        }
     }
 
     public void setRole(final Role role) {
@@ -72,9 +55,6 @@ public class MMPlayer {
         return kills;
     }
 
-    public List<ShopEffect> getShopEffectList() {
-        return shopEffectList;
-    }
 
     public void setKiller(final UUID killer) {
         this.killer = killer;

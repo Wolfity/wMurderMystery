@@ -27,7 +27,6 @@ public class Arena {
     private int lobbyCountdown;
     private int gameTimer;
     private final int maxPlayers, minPlayers;
-   // private final List<Role> roleList;
     private int graceTimer, goldInterval, newDetectiveArrow;
 
     public File arenaConfigFile;
@@ -43,13 +42,6 @@ public class Arena {
         this.graceTimer = graceTimer;
         this.goldInterval = goldInterval;
         this.newDetectiveArrow = newDetectiveArrow;
-//        this.roleList = Arrays.asList(
-//                new Role("Murderer", Utils.colorize("&cMurderer"), 1),
-//                new Role("Detective", Utils.colorize("&aDetective"), 1),
-//                new Role("Innocent", Utils.colorize("&aInnocent"), 1)
-//
-//
-//        );
 
     }
 
