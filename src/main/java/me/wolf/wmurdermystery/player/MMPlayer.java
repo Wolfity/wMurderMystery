@@ -9,17 +9,13 @@ import java.util.UUID;
 
 public class MMPlayer {
 
-    private final MurderMysteryPlugin plugin;
-
     private final UUID uuid;
     private int kills;
     private boolean isSpectator;
     private Role role;
     private UUID killer;
-
-
-    public MMPlayer(final UUID uuid, final MurderMysteryPlugin plugin) {
-        this.plugin = plugin;
+    
+    public MMPlayer(final UUID uuid) {
         this.role = Role.UNASSIGNED;
         this.uuid = uuid;
         this.kills = 0;

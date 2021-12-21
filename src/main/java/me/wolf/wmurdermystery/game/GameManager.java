@@ -205,7 +205,7 @@ public class GameManager {
                 player.sendMessage(Messages.ARENA_IS_FULL);
             }
             //create new MMPlayer object
-            plugin.getMmPlayers().put(player.getUniqueId(), new MMPlayer(player.getUniqueId(), plugin));
+            plugin.getMmPlayers().put(player.getUniqueId(), new MMPlayer(player.getUniqueId()));
             final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
             arena.getArenaMembers().add(mmPlayer);
 
