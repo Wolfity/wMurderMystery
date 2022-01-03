@@ -11,7 +11,6 @@ import me.wolf.wmurdermystery.player.MMPlayer;
 import me.wolf.wmurdermystery.scoreboard.Scoreboards;
 import me.wolf.wmurdermystery.shop.IShopNPC;
 import me.wolf.wmurdermystery.shop.ShopEffectManager;
-import me.wolf.wmurdermystery.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
@@ -23,8 +22,9 @@ import java.util.*;
 
 public class MurderMysteryPlugin extends JavaPlugin {
 
+    private final Set<Arena> arenas = new HashSet<>();
+    private final Map<UUID, MMPlayer> mmPlayers = new HashMap<>();
     private MurderMysteryPlugin plugin;
-
     private ArenaManager arenaManager;
     private GameManager gameManager;
     private Scoreboards scoreboard;
@@ -32,18 +32,11 @@ public class MurderMysteryPlugin extends JavaPlugin {
     private ShopEffectManager shopEffectManager;
     private IShopNPC iShopNPC;
 
-    private final Set<Arena> arenas = new HashSet<>();
-    private final Map<UUID, MMPlayer> mmPlayers = new HashMap<>();
-
-
     @Override
     public void onEnable() {
         plugin = this;
-        if(!loadNMS()) {
-            Bukkit.getLogger().info(Utils.colorize("&4No NMS Support for this version... shutting down murder mystery"));
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
-        }
+        loadNMS();
+
         final File folder = new File(plugin.getDataFolder() + "/arenas");
         if (!folder.exists()) {
             folder.mkdirs();
@@ -59,7 +52,6 @@ public class MurderMysteryPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        arenaManager.saveArenas();
 
         //clearing out all arenas incase there were ongoing game
         for (final Arena arena : getArenas()) {
@@ -143,15 +135,12 @@ public class MurderMysteryPlugin extends JavaPlugin {
         return shopEffectManager;
     }
 
-    private boolean loadNMS() {
+    private void loadNMS() {
         final String version = getServer().getClass().getPackage().getName().split("\\.")[3];
         try {
             iShopNPC = (IShopNPC) Class.forName("me.wolf.wmurdermystery.shop.versions." + version).newInstance();
             System.out.println("&fSuccessfully loaded support for &a" + version + "&f!");
-            return true;
-        } catch (Exception ex) {
-            System.out.println("&fFailed to load &f. &4MurderMystery &fdoes not support version " + version + ". &cShutting down now...");
-            return false;
+        } catch (Exception ignored) {
         }
     }
 }

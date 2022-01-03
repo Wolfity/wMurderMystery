@@ -10,9 +10,6 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 @SuppressWarnings("ConstantConditions")
 public class v1_16_R3 implements IShopNPC {
 
-    public v1_16_R3() {
-
-    }
 
     @Override
     public void spawnShopNPC(Location location) {

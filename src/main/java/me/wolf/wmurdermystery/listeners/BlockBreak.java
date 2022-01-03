@@ -8,6 +8,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 public class BlockBreak implements Listener {
 
     private final MurderMysteryPlugin plugin;
+
     public BlockBreak(final MurderMysteryPlugin plugin) {
         this.plugin = plugin;
     }
@@ -15,7 +16,7 @@ public class BlockBreak implements Listener {
     @EventHandler
     public void onBlockBreak(final BlockBreakEvent event) {
         //cancelling for all players that have a custom player object, no need to break blocks while ingame
-        if(plugin.getMmPlayers().containsKey(event.getPlayer().getUniqueId())) {
+        if (plugin.getMmPlayers().containsKey(event.getPlayer().getUniqueId())) {
             event.setCancelled(true);
         }
     }

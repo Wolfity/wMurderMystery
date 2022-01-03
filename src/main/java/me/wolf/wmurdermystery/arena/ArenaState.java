@@ -1,6 +1,6 @@
 package me.wolf.wmurdermystery.arena;
 
-public enum  ArenaState {
+public enum ArenaState {
 
     READY,
     GRACE,

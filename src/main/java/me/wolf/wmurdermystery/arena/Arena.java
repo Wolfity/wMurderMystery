@@ -16,71 +16,25 @@ public class Arena {
     private final MurderMysteryPlugin plugin;
 
     private final String name;
-    private ArenaState arenaState = ArenaState.READY;
-    private CustomLocation waitingRoomLoc;
-    private FileConfiguration arenaConfig;
     private final Set<MMPlayer> arenaMembers = new HashSet<>();
     private final List<CustomLocation> spawnLocations = new ArrayList<>();
     private final List<CustomLocation> goldSpotLocations = new ArrayList<>();
     private final List<CustomLocation> shopNPCLocations = new ArrayList<>();
-
+    public File arenaConfigFile;
+    private int maxPlayers, minPlayers;
+    private ArenaState arenaState = ArenaState.READY;
+    private CustomLocation waitingRoomLoc;
+    private FileConfiguration arenaConfig;
     private int lobbyCountdown;
     private int gameTimer;
-    private final int maxPlayers, minPlayers;
     private int graceTimer, goldInterval, newDetectiveArrow;
 
-    public File arenaConfigFile;
-
-    protected Arena(final String name, final int lobbyCountdown, final int graceTimer, final int goldInterval, final int newDetectiveArrow, final int gameTimer, final int minPlayer, final int maxPlayers, final MurderMysteryPlugin plugin) {
+    protected Arena(final String name, final MurderMysteryPlugin plugin) {
         this.plugin = plugin;
         this.name = name;
-        createConfig(name);
-        this.lobbyCountdown = lobbyCountdown;
-        this.gameTimer = gameTimer;
-        this.minPlayers = minPlayer;
-        this.maxPlayers = maxPlayers;
-        this.graceTimer = graceTimer;
-        this.goldInterval = goldInterval;
-        this.newDetectiveArrow = newDetectiveArrow;
-
     }
 
-
-    public void saveArena(final String arenaName) {
-
-        arenaConfig.set("LobbySpawn", waitingRoomLoc.serialize());
-
-        final Arena arena = plugin.getArenaManager().getArena(arenaName);
-
-            int i = 1;
-            for (final CustomLocation location : arena.getSpawnLocations()) {
-                arenaConfig.set("spawn-locations." + i, location.serialize());
-                i++;
-            }
-
-
-            int j = 1;
-            for (final CustomLocation location : arena.getGoldSpotLocations()) {
-                arenaConfig.set("gold-spot-locations." + j, location.serialize());
-                j++;
-            }
-
-
-            int k = 1;
-            for (final CustomLocation location : arena.getShopNPCLocations()) {
-                arenaConfig.set("shop-npc-locations." + k, location.serialize());
-                k++;
-            }
-
-
-        try {
-            arenaConfig.save(arenaConfigFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void createConfig(final String cfgName) {
+    public void createConfig(final String cfgName) {
         arenaConfigFile = new File(plugin.getDataFolder() + "/arenas", cfgName.toLowerCase() + ".yml");
         arenaConfig = new YamlConfiguration();
         try {
@@ -100,7 +54,7 @@ public class Arena {
                 arenaConfig.set("grace-timer", 20);
                 arenaConfig.set("game-timer", 300);
                 arenaConfig.set("gold-interval", 15);
-                arenaConfig.set("detective-new-arrow",10);
+                arenaConfig.set("detective-new-arrow", 10);
                 arenaConfig.save(arenaConfigFile);
             } catch (IOException | InvalidConfigurationException e) {
                 e.printStackTrace();
@@ -132,13 +86,22 @@ public class Arena {
         this.graceTimer = arenaConfig.getInt("grace-timer");
     }
 
-    public void resetGoldInterval() {this.goldInterval = arenaConfig.getInt("gold-interval");}
+    public void resetGoldInterval() {
+        this.goldInterval = arenaConfig.getInt("gold-interval");
+    }
 
-    public void decrementGoldInterval() {goldInterval--;}
+    public void decrementGoldInterval() {
+        goldInterval--;
+    }
 
-    public void decrementNewDetectiveArrow() {newDetectiveArrow--;}
+    public void decrementNewDetectiveArrow() {
+        newDetectiveArrow--;
+    }
 
-    public void resetNewDetectiveArrow() {this.newDetectiveArrow = arenaConfig.getInt("detective-new-arrow");}
+    public void resetNewDetectiveArrow() {
+        this.newDetectiveArrow = arenaConfig.getInt("detective-new-arrow");
+    }
+
     public void addSpawnLocation(final CustomLocation customLocation) {
         if (!spawnLocations.contains(customLocation)) {
             spawnLocations.add(customLocation);
@@ -158,8 +121,6 @@ public class Arena {
     }
 
 
-
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -173,14 +134,6 @@ public class Arena {
         return Objects.hash(name);
     }
 
-    public void setArenaState(final ArenaState arenaState) {
-        this.arenaState = arenaState;
-    }
-
-    public void setWaitingRoomLoc(final CustomLocation waitingRoomLoc) {
-        this.waitingRoomLoc = waitingRoomLoc;
-    }
-
     public String getName() {
         return name;
     }
@@ -189,8 +142,16 @@ public class Arena {
         return arenaState;
     }
 
+    public void setArenaState(final ArenaState arenaState) {
+        this.arenaState = arenaState;
+    }
+
     public CustomLocation getWaitingRoomLoc() {
         return waitingRoomLoc;
+    }
+
+    public void setWaitingRoomLoc(final CustomLocation waitingRoomLoc) {
+        this.waitingRoomLoc = waitingRoomLoc;
     }
 
     public FileConfiguration getArenaConfig() {
@@ -205,11 +166,28 @@ public class Arena {
         return lobbyCountdown;
     }
 
+    public Arena setLobbyCountdown(int lobbyCountdown) {
+        this.lobbyCountdown = lobbyCountdown;
+        return this;
+    }
+
     public int getGameTimer() {
         return gameTimer;
     }
 
-    public int getGoldInterval() {return goldInterval;}
+    public Arena setGameTimer(int gameTimer) {
+        this.gameTimer = gameTimer;
+        return this;
+    }
+
+    public int getGoldInterval() {
+        return goldInterval;
+    }
+
+    public Arena setGoldInterval(int goldInterval) {
+        this.goldInterval = goldInterval;
+        return this;
+    }
 
     public File getArenaConfigFile() {
         return arenaConfigFile;
@@ -223,15 +201,43 @@ public class Arena {
         return goldSpotLocations;
     }
 
-
-
     public int getGraceTimer() {
         return graceTimer;
+    }
+
+    public Arena setGraceTimer(int graceTimer) {
+        this.graceTimer = graceTimer;
+        return this;
     }
 
     public List<CustomLocation> getShopNPCLocations() {
         return shopNPCLocations;
     }
 
-    public int getNewDetectiveArrow() {return newDetectiveArrow;}
+    public int getNewDetectiveArrow() {
+        return newDetectiveArrow;
+    }
+
+    public Arena setNewDetectiveArrow(int newDetectiveArrow) {
+        this.newDetectiveArrow = newDetectiveArrow;
+        return this;
+    }
+
+    public int getMinPlayers() {
+        return minPlayers;
+    }
+
+    public Arena setMinPlayers(int minPlayers) {
+        this.minPlayers = minPlayers;
+        return this;
+    }
+
+    public int getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    public Arena setMaxPlayers(int maxPlayers) {
+        this.maxPlayers = maxPlayers;
+        return this;
+    }
 }

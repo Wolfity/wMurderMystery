@@ -13,10 +13,13 @@ import java.lang.reflect.Field;
 public final class Utils {
 
 
+    private Utils() {
+
+    }
+
     public static String colorize(final String input) {
         return input == null ? "Null value" : ChatColor.translateAlternateColorCodes('&', input);
     }
-
 
     public static String[] colorize(String... messages) {
         String[] colorized = new String[messages.length];
@@ -53,13 +56,8 @@ public final class Utils {
         return o;
     }
 
-
     public static MMPlayer getLastPlayer(final Arena arena) {
-            return arena.getArenaMembers().stream().filter(mmPlayer -> !mmPlayer.isSpectator()).findFirst().orElse(null);
-    }
-
-    private Utils() {
-
+        return arena.getArenaMembers().stream().filter(mmPlayer -> !mmPlayer.isSpectator()).findFirst().orElse(null);
     }
 
 }

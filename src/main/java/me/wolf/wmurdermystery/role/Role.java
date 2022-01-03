@@ -12,7 +12,7 @@ public enum Role {
     private final String name, display;
 
 
-      Role(final String name, final String display) {
+    Role(final String name, final String display) {
         this.name = name;
         this.display = display;
 

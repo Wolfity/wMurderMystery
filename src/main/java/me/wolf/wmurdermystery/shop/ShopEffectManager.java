@@ -1,7 +1,6 @@
 package me.wolf.wmurdermystery.shop;
 
 
-
 import me.wolf.wmurdermystery.MurderMysteryPlugin;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.potion.PotionEffectType;
@@ -13,12 +12,11 @@ public class ShopEffectManager {
 
 
     private final MurderMysteryPlugin plugin;
+    private final Set<ShopEffect> shopEffects = new HashSet<>();
 
     public ShopEffectManager(final MurderMysteryPlugin plugin) {
         this.plugin = plugin;
     }
-
-    private final Set<ShopEffect> shopEffects = new HashSet<>();
 
     public void loadEffects() {
         final FileConfiguration effectCfg = plugin.getFileManager().getShopEffectsConfig().getConfig();

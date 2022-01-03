@@ -13,7 +13,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -23,12 +25,11 @@ import java.util.*;
 public class GameManager {
 
     private final MurderMysteryPlugin plugin;
+    private GameState gameState;
 
     public GameManager(final MurderMysteryPlugin plugin) {
         this.plugin = plugin;
     }
-
-    private GameState gameState;
 
     public void setGameState(final GameState gameState, final Arena arena) {
         this.gameState = gameState;
@@ -196,31 +197,33 @@ public class GameManager {
     public void addPlayer(final Player player, final Arena arena) {
         if (plugin.getArenaManager().isGameActive(arena)) {
             player.sendMessage(Messages.GAME_IN_PROGRESS);
+        } else {
+            if (!arena.getArenaMembers().contains(plugin.getMmPlayers().get(player.getUniqueId()))) {
+                if (arena.getArenaMembers().isEmpty()) {
+                    setGameState(GameState.RECRUITING, arena);
+                }
+                if (arena.getArenaMembers().size() >= arena.getMaxPlayers()) {
+                    player.sendMessage(Messages.ARENA_IS_FULL);
+                }
+                //create new MMPlayer object
+                plugin.getMmPlayers().put(player.getUniqueId(), new MMPlayer(player.getUniqueId()));
+                final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
+                arena.getArenaMembers().add(mmPlayer);
+
+                // set scoreboard
+                plugin.getScoreboard().lobbyScoreboard(player, arena);
+                teleportToLobby(player, arena);
+                giveLobbyInventory(player);
+
+                arena.getArenaMembers().stream().filter(Objects::nonNull).forEach(arenaMembers -> {
+                    final Player arenaPlayers = Bukkit.getPlayer(arenaMembers.getUuid());
+                    plugin.getScoreboard().lobbyScoreboard(arenaPlayers, arena);
+                    arenaPlayers.sendMessage(Messages.PLAYER_JOINED_GAME.replace("{player}", player.getDisplayName()));
+                });
+                enoughPlayers(arena);
+                player.sendMessage(Messages.JOINED_ARENA.replace("{arena}", arena.getName()));
+            } else player.sendMessage(Messages.ALREADY_IN_ARENA);
         }
-        if (!arena.getArenaMembers().contains(plugin.getMmPlayers().get(player.getUniqueId()))) {
-            if (arena.getArenaMembers().isEmpty()) {
-                setGameState(GameState.RECRUITING, arena);
-            }
-            if (arena.getArenaMembers().size() >= arena.getArenaConfig().getInt("max-players")) {
-                player.sendMessage(Messages.ARENA_IS_FULL);
-            }
-            //create new MMPlayer object
-            plugin.getMmPlayers().put(player.getUniqueId(), new MMPlayer(player.getUniqueId()));
-            final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
-            arena.getArenaMembers().add(mmPlayer);
-
-            plugin.getScoreboard().lobbyScoreboard(player, arena);
-            teleportToLobby(player, arena);
-            giveLobbyInventory(player);
-
-            arena.getArenaMembers().stream().filter(Objects::nonNull).forEach(arenaMembers -> {
-                final Player arenaPlayers = Bukkit.getPlayer(arenaMembers.getUuid());
-                plugin.getScoreboard().lobbyScoreboard(arenaPlayers, arena);
-                arenaPlayers.sendMessage(Messages.PLAYER_JOINED_GAME.replace("{player}", player.getDisplayName()));
-            });
-            enoughPlayers(arena);
-            player.sendMessage(Messages.JOINED_ARENA.replace("{arena}", arena.getName()));
-        } else player.sendMessage(Messages.ALREADY_IN_ARENA);
     }
 
     // remove a player from the game, teleport them, clear the custom player object
@@ -228,22 +231,24 @@ public class GameManager {
         for (final Arena arena : plugin.getArenas()) {
             if (!arena.getArenaMembers().contains(plugin.getMmPlayers().get(player.getUniqueId()))) {
                 player.sendMessage(Messages.NOT_IN_ARENA);
+            } else if (plugin.getConfig().get("WorldSpawn") == null) {
+                player.sendMessage(Utils.colorize("&cSomething went wrong, no world spawn set!"));
+            } else {
+
+                final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
+                arena.getArenaMembers().remove(mmPlayer);
+                plugin.getMmPlayers().remove(player.getUniqueId());
+                // teleport back, clear inv
+                player.teleport((Location) plugin.getConfig().get("WorldSpawn"));
+                player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+                player.getInventory().clear();
+                player.sendMessage(Messages.LEFT_ARENA.replace("{arena}", arena.getName()));
+
+                leaveGameCheck(arena);
+                arena.getArenaMembers()
+                        .stream().filter(Objects::nonNull)
+                        .forEach(arenaMember -> Bukkit.getPlayer(arenaMember.getUuid()).sendMessage(Messages.PLAYER_LEFT_GAME.replace("{player}", player.getDisplayName())));
             }
-            if(plugin.getConfig().get("WorldSpawn") == null) {player.sendMessage(Utils.colorize("&cSomething went wrong, no world spawn set!"));}
-
-            final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
-            arena.getArenaMembers().remove(mmPlayer);
-            plugin.getMmPlayers().remove(player.getUniqueId());
-
-            player.teleport((Location) plugin.getConfig().get("WorldSpawn"));
-            player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
-            player.getInventory().clear();
-            player.sendMessage(Messages.LEFT_ARENA.replace("{arena}", arena.getName()));
-
-            leaveGameCheck(arena);
-            arena.getArenaMembers()
-                    .stream().filter(Objects::nonNull)
-                    .forEach(arenaMember -> Bukkit.getPlayer(arenaMember.getUuid()).sendMessage(Messages.PLAYER_LEFT_GAME.replace("{player}", player.getDisplayName())));
         }
     }
 
@@ -254,12 +259,7 @@ public class GameManager {
                 setGameState(GameState.RECRUITING, arena);
                 resetTimers(arena);
             }
-        } else if (gameState == GameState.GRACE) {
-            if (arena.getArenaMembers().size() <= 1) {
-                setGameState(GameState.END, arena);
-                resetTimers(arena);
-            }
-        } else if (gameState == GameState.ACTIVE) {
+        } else if (gameState == GameState.GRACE || gameState == GameState.ACTIVE) {
             if (arena.getArenaMembers().size() <= 1) {
                 setGameState(GameState.END, arena);
                 resetTimers(arena);
@@ -273,7 +273,7 @@ public class GameManager {
             @Override
             public void run() {
                 if (gameState == GameState.RECRUITING) {
-                    if (arena.getArenaMembers().size() >= arena.getArenaConfig().getInt("min-players")) {
+                    if (arena.getArenaMembers().size() >= arena.getMinPlayers()) {
                         setGameState(GameState.LOBBY_COUNTDOWN, arena);
                     } else {
                         this.cancel();
@@ -287,12 +287,12 @@ public class GameManager {
     private void sendGameEndNotification(final Arena arena) {
         arena.getArenaMembers().stream().filter(Objects::nonNull).forEach(mmPlayer -> {
             final Player player = Bukkit.getPlayer(mmPlayer.getUuid());
-            if(Utils.getLastPlayer(arena).getRole() == Role.MURDERER) {
+            if (Utils.getLastPlayer(arena).getRole() == Role.MURDERER) {
                 player.sendMessage(Messages.MURDERER_WON.replace("{murderer}", Bukkit.getPlayer(Utils.getLastPlayer(arena).getUuid()).getDisplayName()));
             } else {
                 player.sendMessage(Messages.GAME_ENDED
                         .replace("{murderer}", Bukkit.getPlayer(plugin.getArenaManager().getMurderer(arena).getUuid()).getDisplayName())
-                .replace("{murdererkiller}", Bukkit.getPlayer(plugin.getArenaManager().getMurderer(arena).getKiller()).getDisplayName()));
+                        .replace("{murdererkiller}", Bukkit.getPlayer(plugin.getArenaManager().getMurderer(arena).getKiller()).getDisplayName()));
             }
         });
     }
@@ -326,9 +326,20 @@ public class GameManager {
     }
 
     private void spawnShopNPCs(final Arena arena) {
-        arena.getShopNPCLocations().forEach(location -> plugin.getiShopNPC().spawnShopNPC(location.toBukkitLocation()));
-
+        if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.18")) {
+            arena.getShopNPCLocations().forEach(customLocation -> {
+                final Villager npc = (Villager) arena.getShopNPCLocations().get(0).toBukkitLocation().getWorld().spawnEntity(customLocation.toBukkitLocation(), EntityType.VILLAGER);
+                npc.setAdult();
+                npc.setCollidable(false);
+                npc.setInvulnerable(true);
+                npc.setCustomNameVisible(true);
+                npc.setCustomName(Utils.colorize("&eGold Shop &7(2 gold, 1 random effect!)"));
+                npc.setAI(false);
+            });
+        } else
+            arena.getShopNPCLocations().forEach(location -> plugin.getiShopNPC().spawnShopNPC(location.toBukkitLocation()));
     }
+
     // assigning the roles to the players
     private void assignRoles(final Arena arena) {
         final List<MMPlayer> arenaMemberList = new ArrayList<>(arena.getArenaMembers());
@@ -340,19 +351,19 @@ public class GameManager {
             });
 
             setGameState(GameState.RECRUITING, arena);
-        } // shuffling the list so there is a random first and second element, assigning 0 to the murderer, 1 to the detective
-        Collections.shuffle(arenaMemberList);
-        arenaMemberList.get(0).setRole(Role.MURDERER);
-        Bukkit.getPlayer(arenaMemberList.get(0).getUuid()).sendTitle(Utils.colorize("&cYou are the murderer!"), "");
-        arenaMemberList.get(1).setRole(Role.DETECTIVE);
-        Bukkit.getPlayer(arenaMemberList.get(1).getUuid()).sendTitle(Utils.colorize("&bYou are the detective!"), "");
+        } else {// shuffling the list so there is a random first and second element, assigning 0 to the murderer, 1 to the detective
+            Collections.shuffle(arenaMemberList);
+            arenaMemberList.get(0).setRole(Role.MURDERER);
+            Bukkit.getPlayer(arenaMemberList.get(0).getUuid()).sendTitle(Utils.colorize("&cYou are the murderer!"), "");
+            arenaMemberList.get(1).setRole(Role.DETECTIVE);
+            Bukkit.getPlayer(arenaMemberList.get(1).getUuid()).sendTitle(Utils.colorize("&bYou are the detective!"), "");
 
-        arenaMemberList.stream().filter(mmPlayer -> mmPlayer.getRole() == Role.UNASSIGNED).forEach(mmPlayer -> mmPlayer.setRole(Role.INNOCENT));
-        arenaMemberList.stream().filter(mmPlayer -> mmPlayer.getRole() == Role.INNOCENT).forEach(mmPlayer -> Bukkit.getPlayer(mmPlayer.getUuid()).sendTitle(Utils.colorize("&aYou are Innocent"), ""));
-
+            arenaMemberList.stream().filter(mmPlayer -> mmPlayer.getRole() == Role.UNASSIGNED).forEach(mmPlayer -> mmPlayer.setRole(Role.INNOCENT));
+            arenaMemberList.stream().filter(mmPlayer -> mmPlayer.getRole() == Role.INNOCENT).forEach(mmPlayer -> Bukkit.getPlayer(mmPlayer.getUuid()).sendTitle(Utils.colorize("&aYou are Innocent"), ""));
+        }
     }
 
-     private void giveLobbyInventory(final Player player) {
+    private void giveLobbyInventory(final Player player) {
         player.getInventory().clear();
         player.setHealth(20);
         player.setFoodLevel(20);

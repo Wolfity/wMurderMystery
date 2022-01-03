@@ -94,7 +94,7 @@ public final class Messages {
             "&cSomething went wrong, you do not have the permissions!");
 
 
-    public static final String GRACE_PERIOD = Utils.colorize("&c[GAME] &eThe grace period has started, the murderer and detective will receive their items in {seconds}  seconds!");
+    public static final String GRACE_PERIOD = Utils.colorize("&c[GAME] &eThe grace period has started, the murderer and detective will receive their items in {seconds} seconds!");
 
     public static final String GRACE_PERIOD_END = Utils.colorize("&c[GAME] &eThe murderer and detectives have received their items!\n" +
             "&eGood luck!");

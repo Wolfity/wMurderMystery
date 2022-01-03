@@ -41,7 +41,7 @@ public class v1_16_R3_Villager extends EntityVillager {
             availableGoalsField.set(this.targetSelector, Sets.newLinkedHashSet());
             priorityBehaviorsField.set(this.getBehaviorController(), Collections.emptyMap());
             coreActivitysField.set(this.getBehaviorController(), Sets.newHashSet());
-        }catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

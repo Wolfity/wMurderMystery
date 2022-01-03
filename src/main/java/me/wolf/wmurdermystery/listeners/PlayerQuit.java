@@ -9,6 +9,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 public class PlayerQuit implements Listener {
 
     private final MurderMysteryPlugin plugin;
+
     public PlayerQuit(final MurderMysteryPlugin plugin) {
         this.plugin = plugin;
     }

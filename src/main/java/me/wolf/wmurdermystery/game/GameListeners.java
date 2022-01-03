@@ -45,7 +45,8 @@ public class GameListeners implements Listener {
         final Arena arena = plugin.getArenaManager().getArenaByPlayer(mmPlayer);
         if (arena.getArenaState() == ArenaState.INGAME || arena.getArenaState() == ArenaState.GRACE) {
             if (event.getRightClicked() instanceof Villager) {
-                event.setCancelled(true); }
+                event.setCancelled(true);
+            }
             final Villager npc = (Villager) event.getRightClicked();
             if (!npc.getCustomName().equalsIgnoreCase(Utils.colorize("&eGold Shop &7(2 gold, 1 random effect!)")))
                 return;
@@ -67,7 +68,7 @@ public class GameListeners implements Listener {
             final Arena arena = plugin.getArenaManager().getArenaByPlayer(mmKilled);
 
             if (event.getDamager().getType() == EntityType.ARROW) {
-                if(!(((Arrow) event.getDamager()).getShooter() instanceof Player)) return;
+                if (!(((Arrow) event.getDamager()).getShooter() instanceof Player)) return;
                 final LivingEntity killer = (LivingEntity) ((Arrow) event.getDamager()).getShooter();
                 final MMPlayer mmKiller = plugin.getMmPlayers().get(killer.getUniqueId());
 
@@ -144,8 +145,9 @@ public class GameListeners implements Listener {
         if (event.getItem().getItemStack().getType() != Material.GOLD_INGOT) return;
         for (final ItemStack is : player.getInventory()) {
             if (is == null) continue;
-            if (is.getAmount() >= 9) { // if the player has more than 10 gold, remove gold add arrow and bow if they dont have a bow yet
-                player.getInventory().removeItem(new ItemStack(Material.GOLD_INGOT, 10));
+            if (is.getAmount() + event.getItem().getItemStack().getAmount() >= 10) { // if the player has more than 10 gold, remove gold add arrow and bow if they dont have a bow yet
+                Bukkit.getScheduler().runTaskLater(plugin,
+                        () -> player.getInventory().removeItem(new ItemStack(Material.GOLD_INGOT, 10)), 1L);
                 player.getInventory().addItem(new ItemStack(Material.ARROW));
                 if (!player.getInventory().contains(Material.BOW)) {
                     player.getInventory().addItem(new ItemStack(Material.BOW));
@@ -242,7 +244,7 @@ public class GameListeners implements Listener {
     private void playDamageSound(final Arena arena) {
         arena.getArenaMembers().forEach(mmPlayer -> {
             final Player alLPlayers = Bukkit.getPlayer(mmPlayer.getUuid());
-            alLPlayers.playSound(alLPlayers.getLocation(),XSound.ENTITY_PLAYER_HURT.parseSound(), 1f, 1f);
+            alLPlayers.playSound(alLPlayers.getLocation(), XSound.ENTITY_PLAYER_HURT.parseSound(), 1f, 1f);
         });
     }
 

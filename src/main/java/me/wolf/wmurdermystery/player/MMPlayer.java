@@ -1,6 +1,5 @@
 package me.wolf.wmurdermystery.player;
 
-import me.wolf.wmurdermystery.MurderMysteryPlugin;
 import me.wolf.wmurdermystery.role.Role;
 
 import java.util.Objects;
@@ -14,7 +13,7 @@ public class MMPlayer {
     private boolean isSpectator;
     private Role role;
     private UUID killer;
-    
+
     public MMPlayer(final UUID uuid) {
         this.role = Role.UNASSIGNED;
         this.uuid = uuid;
@@ -23,12 +22,12 @@ public class MMPlayer {
 
     }
 
-    public void setRole(final Role role) {
-        this.role = role;
-    }
-
     public Role getRole() {
         return role;
+    }
+
+    public void setRole(final Role role) {
+        this.role = role;
     }
 
     public boolean isSpectator() {
@@ -51,13 +50,12 @@ public class MMPlayer {
         return kills;
     }
 
+    public UUID getKiller() {
+        return killer;
+    }
 
     public void setKiller(final UUID killer) {
         this.killer = killer;
-    }
-
-    public UUID getKiller() {
-        return killer;
     }
 
     @Override

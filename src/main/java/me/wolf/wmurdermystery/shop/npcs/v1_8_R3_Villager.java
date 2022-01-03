@@ -21,8 +21,6 @@ public class v1_8_R3_Villager extends EntityVillager {
 
     }
 
-
-
     @Override
     public void move(double d0, double d1, double d2) {
 

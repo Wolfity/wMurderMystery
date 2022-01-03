@@ -4,13 +4,16 @@ import me.wolf.wmurdermystery.MurderMysteryPlugin;
 import me.wolf.wmurdermystery.player.MMPlayer;
 import me.wolf.wmurdermystery.role.Role;
 import me.wolf.wmurdermystery.utils.CustomLocation;
-import me.wolf.wmurdermystery.utils.Utils;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Villager;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Objects;
 
 @SuppressWarnings("ConstantConditions")
@@ -28,9 +31,18 @@ public class ArenaManager {
             if (arena.getName().equalsIgnoreCase(arenaName))
                 return getArena(arenaName);
 
-        final Arena arena = new Arena(arenaName, 10, 20, 15, 10 ,300, 3, 10, plugin);
-        final World arenaWorld = Bukkit.createWorld(new WorldCreator(arenaName));
-        arenaWorld.setAutoSave(false);
+        final Arena arena =
+                new Arena(arenaName, plugin)
+                        .setLobbyCountdown(10)
+                        .setGraceTimer(20)
+                        .setGoldInterval(15)
+                        .setNewDetectiveArrow(10)
+                        .setGameTimer(10)
+                        .setMinPlayers(3)
+                        .setMaxPlayers(10);
+
+        arena.createConfig(arenaName);
+
         plugin.getArenas().add(arena);
         return arena;
     }
@@ -49,25 +61,14 @@ public class ArenaManager {
         deleteMap(world_folder);
 
     }
+
     // clear the arena from possible left over gold, bows, NPC's and invis armor stands
     public void clearArena(final Arena arena) {
-        final World world = arena.getGoldSpotLocations().get(0).toBukkitLocation().getWorld(); // getting a spawn location to get the world
-        for (final Entity entity : world.getEntities()) {
-            if (entity instanceof Item) { // looping through entities to get all the gold ingots to then remove them
-                if (((Item) entity).getItemStack().getType() == Material.GOLD_INGOT) {
-                    entity.remove();
-                } else if (((Item) entity).getItemStack().getType() == Material.BOW) {
-                    entity.remove();
-                }
-            } else if (entity instanceof Villager) {
-                if (entity.getCustomName().equalsIgnoreCase(Utils.colorize("&eGold Shop &7(2 gold, 1 random effect!)"))) {
-                    entity.remove();
-                }
-            }
-        }
-        Bukkit.unloadWorld(arena.getWaitingRoomLoc().toBukkitLocation().getWorld(), false);
-        final World arenaWorld = Bukkit.createWorld(new WorldCreator(arena.getName()));
-        arenaWorld.setAutoSave(false);
+        arena.getGoldSpotLocations().forEach(customLocation -> Arrays.stream(customLocation.toBukkitLocation().getChunk().getEntities())
+                .filter(entity -> entity instanceof Item ||
+                        entity instanceof Villager)
+                .forEach(Entity::remove));
+
     }
 
     // get an arena by passing in it's name
@@ -112,12 +113,25 @@ public class ArenaManager {
             return;
         }
 
-
         for (final File file : Objects.requireNonNull(folder.listFiles())) {
             final Arena arena = createArena(file.getName().replace(".yml", ""));
+            final FileConfiguration cfg = arena.getArenaConfig();
+            final int maxPlayers = arena.getArenaConfig().getInt("max-players");
+            final int minPlayers = arena.getArenaConfig().getInt("min-players");
+            final int gracePeriod = arena.getArenaConfig().getInt("grace-timer");
+            final int lobbyCountdown = arena.getArenaConfig().getInt("lobby-countdown");
+            final int gameTimer = arena.getArenaConfig().getInt("game-timer");
+            final int goldInterval = arena.getArenaConfig().getInt("gold-interval");
+            final int detectiveArrow = arena.getArenaConfig().getInt("detective-new-arrow");
 
-
-            arena.setWaitingRoomLoc(CustomLocation.deserialize(arena.getArenaConfig().getString("LobbySpawn")));
+            arena.setWaitingRoomLoc(CustomLocation.fromBukkitLocation(new Location(
+                    Bukkit.getWorld(cfg.getString("LobbySpawn.world")),
+                    cfg.getDouble("LobbySpawn.x"),
+                    cfg.getDouble("LobbySpawn.y"),
+                    cfg.getDouble("LobbySpawn.z"),
+                    (float) cfg.getDouble("LobbySpawn.pitch"),
+                    (float) cfg.getDouble("LobbySpawn.yaw"))
+            ));
 
 
             for (final String key : arena.getArenaConfig().getConfigurationSection("spawn-locations").getKeys(false)) {
@@ -128,19 +142,24 @@ public class ArenaManager {
                 arena.addGoldSpotLocation(CustomLocation.deserialize(arena.getArenaConfig().getString("gold-spot-locations." + key)));
             }
 
-            for(final String key : arena.getArenaConfig().getConfigurationSection("shop-npc-locations").getKeys(false)) {
+            for (final String key : arena.getArenaConfig().getConfigurationSection("shop-npc-locations").getKeys(false)) {
                 arena.addShopNPCLocation(CustomLocation.deserialize(arena.getArenaConfig().getString("shop-npc-locations." + key)));
             }
+            arena.setMaxPlayers(maxPlayers);
+            arena.setMinPlayers(minPlayers);
+            arena.setGraceTimer(gracePeriod);
+            arena.setLobbyCountdown(lobbyCountdown);
+            arena.setGameTimer(gameTimer);
+            arena.setGoldInterval(goldInterval);
+            arena.setNewDetectiveArrow(detectiveArrow);
 
             Bukkit.getLogger().info("&aLoaded arena &e" + arena.getName());
+            System.out.println("TEST + " + arena.getGameTimer());
 
         }
     }
-    public void saveArenas() {
-        for (final Arena arena : plugin.getArenas()) {
-            arena.saveArena(arena.getName());
-        }
-    }
+
+
     private void deleteMap(final File dir) {
         File[] files = dir.listFiles();
 

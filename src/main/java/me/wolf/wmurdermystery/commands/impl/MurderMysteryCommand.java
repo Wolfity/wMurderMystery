@@ -6,11 +6,10 @@ import me.wolf.wmurdermystery.commands.BaseCommand;
 import me.wolf.wmurdermystery.constants.Messages;
 import me.wolf.wmurdermystery.game.GameState;
 import me.wolf.wmurdermystery.utils.CustomLocation;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,6 +19,7 @@ public class MurderMysteryCommand extends BaseCommand {
     private final MurderMysteryPlugin plugin;
     private final List<String> firstArg = Arrays.asList("createarena", "deletearena", "setlobby", "setspawn", "setgoldshop", "setnpcshop", "deletenpcshop",
             "deletespawn", "deletegoldspot", "tp");
+
     public MurderMysteryCommand(final MurderMysteryPlugin plugin) {
         super("mm");
         this.plugin = plugin;
@@ -34,7 +34,7 @@ public class MurderMysteryCommand extends BaseCommand {
         }
         if (isAdmin()) {
             if (args.length == 1) {
-                    if(firstArg.contains(args[0])) {
+                if (firstArg.contains(args[0])) {
                     tell("&bPlease specify an arena!");
                 }
                 if (args[0].equalsIgnoreCase("admin")) {
@@ -47,9 +47,8 @@ public class MurderMysteryCommand extends BaseCommand {
             } else if (args.length == 2) {
                 final String arenaName = args[1];
                 if (args[0].equalsIgnoreCase("createarena")) {
-                    tell("&aCreating arena world...");
+                    tell("&aCreating arena ...");
                     plugin.getArenaManager().createArena(arenaName);
-                    player.teleport(new Location(Bukkit.getWorld(arenaName), 0, 80, 0));
                     tell(Messages.ARENA_CREATED.replace("{arena}", arenaName));
                 } else if (args[0].equalsIgnoreCase("deletearena")) {
                     if (plugin.getArenaManager().getArena(arenaName) != null) {
@@ -116,8 +115,11 @@ public class MurderMysteryCommand extends BaseCommand {
             i++;
         }
         tell(Messages.SET_GAME_SPAWN);
-        Bukkit.getWorld(arenaName).save();
-        arena.saveArena(arenaName);
+        try {
+            arena.getArenaConfig().save(arena.getArenaConfigFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // This method takes care of storing the gold spawn spots in the config
@@ -131,9 +133,14 @@ public class MurderMysteryCommand extends BaseCommand {
             plugin.getArenaManager().getArena(arenaName).getArenaConfig().set("gold-spot-locations." + i, location.serialize());
             i++;
         }
+        try {
+            arena.getArenaConfig().save(arena.getArenaConfigFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        plugin.getArenaManager().getArena(arenaName).addGoldSpotLocation(CustomLocation.fromBukkitLocation(player.getLocation()));
         tell(Messages.SET_GOLD_SPOT);
-        Bukkit.getWorld(arenaName).save();
-        arena.saveArena(arenaName);
 
     }
 
@@ -152,9 +159,15 @@ public class MurderMysteryCommand extends BaseCommand {
             plugin.getArenaManager().getArena(arenaName).getArenaConfig().set("shop-npc-locations." + i, location.serialize());
             i++;
         }
+
+        try {
+            arena.getArenaConfig().save(arena.getArenaConfigFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         tell(Messages.SET_NPC_SHOP);
-        Bukkit.getWorld(arenaName).save();
-        arena.saveArena(arenaName);
+        plugin.getArenaManager().getArena(arenaName).addShopNPCLocation(CustomLocation.fromBukkitLocation(player.getLocation()));
     }
 
     // setting an arena's waiting room lobby location
@@ -168,8 +181,12 @@ public class MurderMysteryCommand extends BaseCommand {
         }
         arena.getArenaConfig().set("LobbySpawn", player.getLocation().serialize());
         arena.setWaitingRoomLoc(CustomLocation.fromBukkitLocation(player.getLocation()));
-        Bukkit.getWorld(arenaName).save();
-        arena.saveArena(arenaName);
+        try {
+            arena.getArenaConfig().save(arena.getArenaConfigFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        plugin.getArenaManager().getArena(arenaName).setWaitingRoomLoc(CustomLocation.fromBukkitLocation(player.getLocation()));
         tell(Messages.SET_LOBBY_SPAWN);
     }
 
@@ -186,7 +203,14 @@ public class MurderMysteryCommand extends BaseCommand {
             arena.getArenaConfig().set("shop-npc-locations." + i, location.serialize());
             i++;
         }
-        arena.saveArena(arena.getName());
+
+        try {
+            arena.getArenaConfig().save(arena.getArenaConfigFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        arena.getShopNPCLocations().remove(CustomLocation.fromBukkitLocation(player.getLocation()));
         tell(Messages.DELETED_NPC_SHOP);
 
     }
@@ -205,7 +229,13 @@ public class MurderMysteryCommand extends BaseCommand {
             i++;
         }
 
-        arena.saveArena(arena.getName());
+        try {
+            arena.getArenaConfig().save(arena.getArenaConfigFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        arena.getSpawnLocations().remove(CustomLocation.fromBukkitLocation(player.getLocation()));
         tell(Messages.DELETED_SPAWN);
     }
 
@@ -223,7 +253,13 @@ public class MurderMysteryCommand extends BaseCommand {
             i++;
         }
 
-        arena.saveArena(arena.getName());
+        try {
+            arena.getArenaConfig().save(arena.getArenaConfigFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        arena.getGoldSpotLocations().remove(CustomLocation.fromBukkitLocation(player.getLocation()));
         tell(Messages.DELETED_GOLD_SPOT);
     }
 }
