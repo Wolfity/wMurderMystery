@@ -60,7 +60,7 @@ public class Scoreboards {
         final int maxPlayers = arena.getArenaConfig().getInt("max-players");
         final String name = arena.getName();
         final int currentPlayers = (int) arena.getArenaMembers().stream().filter(mmPlayer -> !mmPlayer.isSpectator()).count();
-        final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
+        final MMPlayer mmPlayer = plugin.getPlayerManager().getMMPlayer(player.getUniqueId());
 
         final String roleName = mmPlayer.getRole().getDisplay();
 

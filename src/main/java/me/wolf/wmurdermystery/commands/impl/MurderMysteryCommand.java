@@ -47,9 +47,11 @@ public class MurderMysteryCommand extends BaseCommand {
             } else if (args.length == 2) {
                 final String arenaName = args[1];
                 if (args[0].equalsIgnoreCase("createarena")) {
-                    tell("&aCreating arena ...");
-                    plugin.getArenaManager().createArena(arenaName);
-                    tell(Messages.ARENA_CREATED.replace("{arena}", arenaName));
+                    if(plugin.getArenaManager().getArena(arenaName) == null) {
+                        plugin.getArenaManager().createArena(arenaName);
+                        tell(Messages.ARENA_CREATED.replace("{arena}", arenaName));
+                    } else tell(Messages.ARENA_EXISTS);
+
                 } else if (args[0].equalsIgnoreCase("deletearena")) {
                     if (plugin.getArenaManager().getArena(arenaName) != null) {
                         plugin.getArenaManager().deleteArena(arenaName);
@@ -85,7 +87,7 @@ public class MurderMysteryCommand extends BaseCommand {
             if (args[0].equalsIgnoreCase("join")) {
                 if (plugin.getArenaManager().getArena(arenaName) != null) {
                     plugin.getGameManager().addPlayer(player, plugin.getArenaManager().getArena(arenaName));
-                }
+                } else tell(Messages.ARENA_NOT_FOUND);
             }
         } else if (args.length == 1) {
             if (args[0].equalsIgnoreCase("leave")) {

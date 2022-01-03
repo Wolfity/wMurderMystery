@@ -147,12 +147,15 @@ public class GameManager {
             player.getInventory().clear();
             teleportToWorld(arena);
 
+            // clear inv + reset gamemode/armor
             player.getInventory().clear();
             player.getInventory().setArmorContents(null);
             player.setGameMode(GameMode.SURVIVAL);
 
-            plugin.getMmPlayers().remove(player.getUniqueId());
+            // remove their object
+            plugin.getPlayerManager().removeMMPlayer(player.getUniqueId());
 
+            // remove active effects, change player list name + change scoreboard
             player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
             player.setPlayerListName(player.getName());
             player.getActivePotionEffects().clear();
@@ -173,7 +176,7 @@ public class GameManager {
             final Player player = Bukkit.getPlayer(mmPlayer.getUuid());
             final Location worldLoc = (Location) plugin.getConfig().get("WorldSpawn");
             player.teleport(worldLoc);
-            plugin.getMmPlayers().remove(player.getUniqueId());
+            plugin.getPlayerManager().removeMMPlayer(player.getUniqueId());
         });
     }
 
@@ -198,7 +201,7 @@ public class GameManager {
         if (plugin.getArenaManager().isGameActive(arena)) {
             player.sendMessage(Messages.GAME_IN_PROGRESS);
         } else {
-            if (!arena.getArenaMembers().contains(plugin.getMmPlayers().get(player.getUniqueId()))) {
+            if (!arena.getArenaMembers().contains(plugin.getPlayerManager().getMmPlayers().get(player.getUniqueId()))) {
                 if (arena.getArenaMembers().isEmpty()) {
                     setGameState(GameState.RECRUITING, arena);
                 }
@@ -206,8 +209,9 @@ public class GameManager {
                     player.sendMessage(Messages.ARENA_IS_FULL);
                 }
                 //create new MMPlayer object
-                plugin.getMmPlayers().put(player.getUniqueId(), new MMPlayer(player.getUniqueId()));
-                final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
+                plugin.getPlayerManager().addMMPlayer(player.getUniqueId());
+                final MMPlayer mmPlayer = plugin.getPlayerManager().getMMPlayer(player.getUniqueId());
+
                 arena.getArenaMembers().add(mmPlayer);
 
                 // set scoreboard
@@ -228,16 +232,16 @@ public class GameManager {
 
     // remove a player from the game, teleport them, clear the custom player object
     public void removePlayer(final Player player) {
-        for (final Arena arena : plugin.getArenas()) {
-            if (!arena.getArenaMembers().contains(plugin.getMmPlayers().get(player.getUniqueId()))) {
-                player.sendMessage(Messages.NOT_IN_ARENA);
-            } else if (plugin.getConfig().get("WorldSpawn") == null) {
-                player.sendMessage(Utils.colorize("&cSomething went wrong, no world spawn set!"));
-            } else {
-
-                final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
+        if (plugin.getPlayerManager().getMMPlayer(player.getUniqueId()) == null) {
+            player.sendMessage(Messages.NOT_IN_ARENA);
+        } else if (plugin.getConfig().get("WorldSpawn") == null) {
+            player.sendMessage(Utils.colorize("&cSomething went wrong, no world spawn set!"));
+        } else {
+            final MMPlayer mmPlayer = plugin.getPlayerManager().getMMPlayer(player.getUniqueId());
+            final Arena arena = plugin.getArenaManager().getArenaByPlayer(mmPlayer);
+            if (arena != null) {
                 arena.getArenaMembers().remove(mmPlayer);
-                plugin.getMmPlayers().remove(player.getUniqueId());
+                plugin.getPlayerManager().removeMMPlayer(player.getUniqueId());
                 // teleport back, clear inv
                 player.teleport((Location) plugin.getConfig().get("WorldSpawn"));
                 player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
@@ -248,9 +252,10 @@ public class GameManager {
                 arena.getArenaMembers()
                         .stream().filter(Objects::nonNull)
                         .forEach(arenaMember -> Bukkit.getPlayer(arenaMember.getUuid()).sendMessage(Messages.PLAYER_LEFT_GAME.replace("{player}", player.getDisplayName())));
-            }
+            } else player.sendMessage(Messages.NOT_IN_ARENA);
         }
     }
+
 
     // If someone leaves, check if there are any players left, else reset the game
     private void leaveGameCheck(final Arena arena) {
@@ -349,7 +354,6 @@ public class GameManager {
                 player.sendMessage(Utils.colorize("&cCancelled the game, not enough players!"));
                 teleportToLobby(player, arena);
             });
-
             setGameState(GameState.RECRUITING, arena);
         } else {// shuffling the list so there is a random first and second element, assigning 0 to the murderer, 1 to the detective
             Collections.shuffle(arenaMemberList);
@@ -374,8 +378,8 @@ public class GameManager {
         player.setHealth(20);
         player.setFoodLevel(20);
 
-        if (plugin.getMmPlayers().containsKey(player.getUniqueId())) {
-            final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
+        if (plugin.getPlayerManager().getMMPlayer(player.getUniqueId()) != null) {
+            final MMPlayer mmPlayer = plugin.getPlayerManager().getMMPlayer(player.getUniqueId());
             if (mmPlayer.getRole() == Role.MURDERER) {
                 player.getInventory().addItem(new ItemStack(Material.IRON_SWORD));
             } else if (mmPlayer.getRole() == Role.DETECTIVE) {
@@ -383,6 +387,7 @@ public class GameManager {
             }
         }
     }
+
 
     // method to continuously update the detectives inventory
     private void updateDetectiveInventory(final Arena arena) {

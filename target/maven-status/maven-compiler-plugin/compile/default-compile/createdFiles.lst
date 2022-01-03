@@ -13,6 +13,7 @@ me\wolf\wmurdermystery\listeners\PlayerQuit.class
 me\wolf\wmurdermystery\files\FileManager.class
 me\wolf\wmurdermystery\game\GameManager$6.class
 me\wolf\wmurdermystery\game\GameState.class
+me\wolf\wmurdermystery\player\PlayerManager.class
 me\wolf\wmurdermystery\shop\versions\v1_8_R3.class
 me\wolf\wmurdermystery\exception\NotEnoughSpawnsException.class
 me\wolf\wmurdermystery\shop\IShopNPC.class

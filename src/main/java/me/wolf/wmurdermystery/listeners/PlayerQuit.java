@@ -17,10 +17,10 @@ public class PlayerQuit implements Listener {
     @EventHandler
     public void onQuit(final PlayerQuitEvent event) {
         final Player player = event.getPlayer();
+        if (plugin.getPlayerManager().getMMPlayer(player.getUniqueId()) == null) return;
 
-        if (plugin.getMmPlayers().containsKey(player.getUniqueId())) {
-            plugin.getGameManager().removePlayer(player);
-        }
+        plugin.getGameManager().removePlayer(player);
+
     }
 
 }

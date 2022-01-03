@@ -16,9 +16,7 @@ public class BlockPlace implements Listener {
     @EventHandler
     public void onPlace(final BlockPlaceEvent event) {
         //cancelling for all players that have a custom player obj, no need to place blocks anywhere
-        if (plugin.getMmPlayers().containsKey(event.getPlayer().getUniqueId())) {
-            event.setCancelled(true);
-        }
+        event.setCancelled(plugin.getPlayerManager().getMMPlayer(event.getPlayer().getUniqueId()) != null);
     }
 
 

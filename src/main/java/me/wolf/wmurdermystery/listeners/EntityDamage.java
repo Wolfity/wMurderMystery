@@ -21,13 +21,14 @@ public class EntityDamage implements Listener {
     public void onLobbyDamage(final EntityDamageByEntityEvent event) {
         if (event.getEntity() instanceof Player) {
             final Player player = (Player) event.getEntity();
-            if (plugin.getMmPlayers().containsKey(player.getUniqueId())) {
-                final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
-                final Arena arena = plugin.getArenaManager().getArenaByPlayer(mmPlayer);
-                if (arena.getArenaState() == ArenaState.READY || arena.getArenaState() == ArenaState.COUNTDOWN || arena.getArenaState() == ArenaState.GRACE) {
-                    event.setCancelled(true);
-                }
+            if (plugin.getPlayerManager().getMMPlayer(player.getUniqueId()) == null) return;
+
+            final MMPlayer mmPlayer = plugin.getPlayerManager().getMMPlayer(player.getUniqueId());
+            final Arena arena = plugin.getArenaManager().getArenaByPlayer(mmPlayer);
+            if (arena.getArenaState() == ArenaState.READY || arena.getArenaState() == ArenaState.COUNTDOWN || arena.getArenaState() == ArenaState.GRACE) {
+                event.setCancelled(true);
             }
+
         }
     }
 

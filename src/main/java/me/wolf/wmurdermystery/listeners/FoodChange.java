@@ -16,9 +16,7 @@ public class FoodChange implements Listener {
     @EventHandler
     public void onFoodChange(final FoodLevelChangeEvent event) {
         //cancelling for everyone that has a custom player object, in no way are you supposed to lose a food level
-        if (plugin.getMmPlayers().containsKey(event.getEntity().getUniqueId())) {
-            event.setCancelled(true);
-        }
+        event.setCancelled(plugin.getPlayerManager().getMMPlayer(event.getEntity().getUniqueId()) != null);
 
     }
 

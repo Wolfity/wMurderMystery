@@ -15,10 +15,7 @@ public class ItemDrop implements Listener {
 
     @EventHandler
     public void onDrop(final PlayerDropItemEvent event) {
-
-        if (plugin.getMmPlayers().containsKey(event.getPlayer().getUniqueId())) {
-            event.setCancelled(true);
-        }
+        event.setCancelled(plugin.getPlayerManager().getMMPlayer(event.getPlayer().getUniqueId()) != null);
     }
 
 }

@@ -6,7 +6,6 @@ import me.wolf.wmurdermystery.role.Role;
 import me.wolf.wmurdermystery.utils.CustomLocation;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -14,12 +13,15 @@ import org.bukkit.entity.Villager;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @SuppressWarnings("ConstantConditions")
 public class ArenaManager {
 
     private final MurderMysteryPlugin plugin;
+    private final Set<Arena> arenas = new HashSet<>();
 
     public ArenaManager(final MurderMysteryPlugin plugin) {
         this.plugin = plugin;
@@ -27,7 +29,7 @@ public class ArenaManager {
 
 
     public Arena createArena(final String arenaName) {
-        for (final Arena arena : plugin.getArenas())
+        for (final Arena arena : arenas)
             if (arena.getName().equalsIgnoreCase(arenaName))
                 return getArena(arenaName);
 
@@ -43,7 +45,7 @@ public class ArenaManager {
 
         arena.createConfig(arenaName);
 
-        plugin.getArenas().add(arena);
+        arenas.add(arena);
         return arena;
     }
 
@@ -52,13 +54,7 @@ public class ArenaManager {
         if (arena == null) return;
 
         arena.getArenaConfigFile().delete();
-        plugin.getArenas().remove(arena);
-
-        Bukkit.getWorld(name).getPlayers().stream().filter(Objects::nonNull).forEach(player -> player.teleport((Location) plugin.getConfig().get("WorldSpawn")));
-        final World world = Bukkit.getWorld(name);
-        Bukkit.unloadWorld(world, false);
-        final File world_folder = new File(plugin.getServer().getWorldContainer() + File.separator + name + File.separator);
-        deleteMap(world_folder);
+        arenas.remove(arena);
 
     }
 
@@ -73,21 +69,12 @@ public class ArenaManager {
 
     // get an arena by passing in it's name
     public Arena getArena(final String name) {
-        for (final Arena arena : plugin.getArenas())
-            if (arena.getName().equalsIgnoreCase(name))
-                return arena;
-
-        return null;
+        return arenas.stream().filter(arena -> arena.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 
     // getting an arena by passing in a player, looping over all arenas to see if the player is in there
     public Arena getArenaByPlayer(final MMPlayer mmPlayer) {
-        for (final Arena arena : plugin.getArenas()) {
-            if (arena.getArenaMembers().contains(mmPlayer)) {
-                return arena;
-            }
-        }
-        return null;
+        return arenas.stream().filter(arena -> arena.getArenaMembers().contains(mmPlayer)).findFirst().orElse(null);
     }
 
     // getting the murderer
@@ -96,7 +83,7 @@ public class ArenaManager {
     }
 
     public Arena getFreeArena() {
-        return plugin.getArenas().stream().filter(arena -> arena.getArenaState() == ArenaState.READY).findFirst().orElse(null);
+        return arenas.stream().filter(arena -> arena.getArenaState() == ArenaState.READY).findFirst().orElse(null);
     }
 
     public boolean isGameActive(final Arena arena) {
@@ -160,15 +147,8 @@ public class ArenaManager {
     }
 
 
-    private void deleteMap(final File dir) {
-        File[] files = dir.listFiles();
 
-        for (final File file : files) {
-            if (file.isDirectory()) {
-                this.deleteMap(file);
-            }
-            file.delete();
-        }
-        dir.delete();
+    public Set<Arena> getArenas() {
+        return arenas;
     }
 }

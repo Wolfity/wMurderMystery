@@ -8,6 +8,7 @@ import me.wolf.wmurdermystery.game.GameListeners;
 import me.wolf.wmurdermystery.game.GameManager;
 import me.wolf.wmurdermystery.listeners.*;
 import me.wolf.wmurdermystery.player.MMPlayer;
+import me.wolf.wmurdermystery.player.PlayerManager;
 import me.wolf.wmurdermystery.scoreboard.Scoreboards;
 import me.wolf.wmurdermystery.shop.IShopNPC;
 import me.wolf.wmurdermystery.shop.ShopEffectManager;
@@ -22,19 +23,18 @@ import java.util.*;
 
 public class MurderMysteryPlugin extends JavaPlugin {
 
-    private final Set<Arena> arenas = new HashSet<>();
-    private final Map<UUID, MMPlayer> mmPlayers = new HashMap<>();
-    private MurderMysteryPlugin plugin;
+
     private ArenaManager arenaManager;
     private GameManager gameManager;
     private Scoreboards scoreboard;
     private FileManager fileManager;
     private ShopEffectManager shopEffectManager;
     private IShopNPC iShopNPC;
+    private PlayerManager playerManager;
 
     @Override
     public void onEnable() {
-        plugin = this;
+        MurderMysteryPlugin plugin = this;
         loadNMS();
 
         final File folder = new File(plugin.getDataFolder() + "/arenas");
@@ -54,7 +54,7 @@ public class MurderMysteryPlugin extends JavaPlugin {
     public void onDisable() {
 
         //clearing out all arenas incase there were ongoing game
-        for (final Arena arena : getArenas()) {
+        for (final Arena arena : getArenaManager().getArenas()) {
             getArenaManager().clearArena(arena);
         }
 
@@ -86,6 +86,8 @@ public class MurderMysteryPlugin extends JavaPlugin {
         this.gameManager = new GameManager(this);
         this.scoreboard = new Scoreboards(this);
         this.shopEffectManager = new ShopEffectManager(this);
+        this.playerManager = new PlayerManager();
+
         shopEffectManager.loadEffects();
 
     }
@@ -115,12 +117,8 @@ public class MurderMysteryPlugin extends JavaPlugin {
         return scoreboard;
     }
 
-    public Set<Arena> getArenas() {
-        return arenas;
-    }
-
-    public Map<UUID, MMPlayer> getMmPlayers() {
-        return mmPlayers;
+    public PlayerManager getPlayerManager() {
+        return playerManager;
     }
 
     public FileManager getFileManager() {

@@ -40,8 +40,9 @@ public class GameListeners implements Listener {
     @EventHandler
     public void shopInteract(final PlayerInteractAtEntityEvent event) {
         final Player player = event.getPlayer();
-        if (!plugin.getMmPlayers().containsKey(player.getUniqueId())) return;
-        final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
+        if (plugin.getPlayerManager().getMMPlayer(player.getUniqueId()) == null) return;
+
+        final MMPlayer mmPlayer = plugin.getPlayerManager().getMMPlayer(player.getUniqueId());
         final Arena arena = plugin.getArenaManager().getArenaByPlayer(mmPlayer);
         if (arena.getArenaState() == ArenaState.INGAME || arena.getArenaState() == ArenaState.GRACE) {
             if (event.getRightClicked() instanceof Villager) {
@@ -59,61 +60,60 @@ public class GameListeners implements Listener {
     // checking if someone is killed, and if it's the murderer, if you kill an innocent/detective, both die
     @EventHandler
     public void onKill(final EntityDamageByEntityEvent event) {
-
         if (!(event.getEntity() instanceof Player)) return;
         final Player killed = (Player) event.getEntity();
+        if (plugin.getPlayerManager().getMMPlayer(killed.getUniqueId()) == null) return;
 
-        if (plugin.getMmPlayers().containsKey(killed.getUniqueId())) {
-            final MMPlayer mmKilled = plugin.getMmPlayers().get(killed.getUniqueId());
-            final Arena arena = plugin.getArenaManager().getArenaByPlayer(mmKilled);
 
-            if (event.getDamager().getType() == EntityType.ARROW) {
-                if (!(((Arrow) event.getDamager()).getShooter() instanceof Player)) return;
-                final LivingEntity killer = (LivingEntity) ((Arrow) event.getDamager()).getShooter();
-                final MMPlayer mmKiller = plugin.getMmPlayers().get(killer.getUniqueId());
+        final MMPlayer mmKilled = plugin.getPlayerManager().getMMPlayer(killed.getUniqueId());
+        final Arena arena = plugin.getArenaManager().getArenaByPlayer(mmKilled);
 
-                if (mmKilled.getRole() == Role.MURDERER) {
-                    mmKilled.setKiller(killer.getUniqueId());
-                    setSpectator(mmKilled);
-                    plugin.getGameManager().setGameState(GameState.END, arena);
-                }
+        if (event.getDamager().getType() == EntityType.ARROW) {
+            if (!(((Arrow) event.getDamager()).getShooter() instanceof Player)) return;
+            final LivingEntity killer = (LivingEntity) ((Arrow) event.getDamager()).getShooter();
+            final MMPlayer mmKiller = plugin.getPlayerManager().getMMPlayer(killer.getUniqueId());
 
-                // checking if detectives gets killed by an innocent, only checking for innocent, because the murderer can't get a bow + arrow
-                if (mmKilled.getRole() == Role.DETECTIVE && mmKiller.getRole() == Role.INNOCENT) {
-                    setSpectator(mmKiller, mmKilled);
-                    spawnDetectiveBow(mmKilled);
-                }
-                // checking if an innocent gets killed by an innocent or detective
-                if (mmKilled.getRole() == Role.INNOCENT && mmKiller.getRole() != Role.MURDERER) {
-                    setSpectator(mmKiller, mmKilled);
-                }
-                playDamageSound(arena);
-
-            } else if (event.getDamager() instanceof Player) {
-                final Player killer = (Player) event.getDamager();
-                final MMPlayer mmKiller = plugin.getMmPlayers().get(killer.getUniqueId());
-                // checking if someone got killed by a sword (murderer)
-                if (killer.getItemInHand().getType() == Material.IRON_SWORD) {
-
-                    //checking if it's the detective
-                    if (mmKilled.getRole() == Role.DETECTIVE) {
-                        playDetectiveKilledMessage(arena, killed);
-                        spawnDetectiveBow(mmKilled);
-                    }
-
-                    mmKiller.incrementKills();
-                    setSpectator(mmKilled);
-                    playDamageSound(arena);
-                }
-
-            }
-
-            // filtering out all arena members that are spectators, if there's 1 left, end game, this can only happen to the murderer
-            if (arena.getArenaMembers().stream().filter(mmPlayer -> !mmPlayer.isSpectator() && Utils.getLastPlayer(arena).getRole() == Role.MURDERER).count() == 1) {
+            if (mmKilled.getRole() == Role.MURDERER) {
+                mmKilled.setKiller(killer.getUniqueId());
+                setSpectator(mmKilled);
                 plugin.getGameManager().setGameState(GameState.END, arena);
             }
-            event.setCancelled(true);
+
+            // checking if detectives gets killed by an innocent, only checking for innocent, because the murderer can't get a bow + arrow
+            if (mmKilled.getRole() == Role.DETECTIVE && mmKiller.getRole() == Role.INNOCENT) {
+                setSpectator(mmKiller, mmKilled);
+                spawnDetectiveBow(mmKilled);
+            }
+            // checking if an innocent gets killed by an innocent or detective
+            if (mmKilled.getRole() == Role.INNOCENT && mmKiller.getRole() != Role.MURDERER) {
+                setSpectator(mmKiller, mmKilled);
+            }
+            playDamageSound(arena);
+
+        } else if (event.getDamager() instanceof Player) {
+            final Player killer = (Player) event.getDamager();
+            final MMPlayer mmKiller = plugin.getPlayerManager().getMMPlayer(killer.getUniqueId());
+            // checking if someone got killed by a sword (murderer)
+            if (killer.getItemInHand().getType() == Material.IRON_SWORD) {
+
+                //checking if it's the detective
+                if (mmKilled.getRole() == Role.DETECTIVE) {
+                    playDetectiveKilledMessage(arena, killed);
+                    spawnDetectiveBow(mmKilled);
+                }
+
+                mmKiller.incrementKills();
+                setSpectator(mmKilled);
+                playDamageSound(arena);
+            }
+
         }
+
+        // filtering out all arena members that are spectators, if there's 1 left, end game, this can only happen to the murderer
+        if (arena.getArenaMembers().stream().filter(mmPlayer -> !mmPlayer.isSpectator() && Utils.getLastPlayer(arena).getRole() == Role.MURDERER).count() == 1) {
+            plugin.getGameManager().setGameState(GameState.END, arena);
+        }
+        event.setCancelled(true);
     }
 
 
@@ -121,8 +121,9 @@ public class GameListeners implements Listener {
     @EventHandler
     public void onChat(final AsyncPlayerChatEvent event) {
         final Player player = event.getPlayer();
-        if (!plugin.getMmPlayers().containsKey(player.getUniqueId())) return;
-        final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
+        if (plugin.getPlayerManager().getMMPlayer(event.getPlayer().getUniqueId()) == null) return;
+
+        final MMPlayer mmPlayer = plugin.getPlayerManager().getMMPlayer(player.getUniqueId());
         final Arena arena = plugin.getArenaManager().getArenaByPlayer(mmPlayer);
         final Set<MMPlayer> spectators = arena.getArenaMembers().stream().filter(MMPlayer::isSpectator).collect(Collectors.toSet());
 
@@ -139,8 +140,9 @@ public class GameListeners implements Listener {
     @EventHandler
     public void onGoldPickup(final PlayerPickupItemEvent event) {
         final Player player = event.getPlayer();
-        if (!plugin.getMmPlayers().containsKey(player.getUniqueId())) return;
-        final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
+        if (plugin.getPlayerManager().getMMPlayer(player.getUniqueId()) == null) return;
+
+        final MMPlayer mmPlayer = plugin.getPlayerManager().getMMPlayer(player.getUniqueId());
         if (mmPlayer.getRole() == Role.MURDERER) return;
         if (event.getItem().getItemStack().getType() != Material.GOLD_INGOT) return;
         for (final ItemStack is : player.getInventory()) {
@@ -160,8 +162,9 @@ public class GameListeners implements Listener {
     @EventHandler
     public void onDetectiveBowPickup(final PlayerPickupItemEvent event) {
         final Player player = event.getPlayer();
-        if (!plugin.getMmPlayers().containsKey(player.getUniqueId())) return;
-        final MMPlayer mmPlayer = plugin.getMmPlayers().get(player.getUniqueId());
+        if (plugin.getPlayerManager().getMMPlayer(player.getUniqueId()) == null) return;
+
+        final MMPlayer mmPlayer = plugin.getPlayerManager().getMMPlayer(player.getUniqueId());
         if (mmPlayer.getRole() != Role.MURDERER) {
             if (event.getItem().getItemStack().getType() == Material.BOW) {
                 for (final Entity stand : player.getNearbyEntities(2, 2, 2)) {
