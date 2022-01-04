@@ -2,6 +2,7 @@ package me.wolf.wmurdermystery.files;
 
 import me.wolf.wmurdermystery.MurderMysteryPlugin;
 import me.wolf.wmurdermystery.utils.Utils;
+import org.bukkit.Bukkit;
 
 public class FileManager {
 
@@ -13,7 +14,7 @@ public class FileManager {
             shopEffectsConfig = new YamlConfig("shopeffects.yml", plugin);
 
         } catch (final Exception e) {
-            System.out.println(Utils.colorize("&4Something went wrong while loading the yml files"));
+            Bukkit.getLogger().info(Utils.colorize("&4Something went wrong while loading the yml files"));
         }
 
     }

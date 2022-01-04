@@ -137,7 +137,7 @@ public class MurderMysteryPlugin extends JavaPlugin {
         final String version = getServer().getClass().getPackage().getName().split("\\.")[3];
         try {
             iShopNPC = (IShopNPC) Class.forName("me.wolf.wmurdermystery.shop.versions." + version).newInstance();
-            System.out.println("&fSuccessfully loaded support for &a" + version + "&f!");
+            Bukkit.getLogger().info("&fSuccessfully loaded support for &a" + version + "&f!");
         } catch (Exception ignored) {
         }
     }

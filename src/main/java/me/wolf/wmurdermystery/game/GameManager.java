@@ -201,31 +201,32 @@ public class GameManager {
         if (plugin.getArenaManager().isGameActive(arena)) {
             player.sendMessage(Messages.GAME_IN_PROGRESS);
         } else {
-            if (!arena.getArenaMembers().contains(plugin.getPlayerManager().getMmPlayers().get(player.getUniqueId()))) {
-                if (arena.getArenaMembers().isEmpty()) {
-                    setGameState(GameState.RECRUITING, arena);
-                }
+            if (!arena.getArenaMembers().contains(plugin.getPlayerManager().getMMPlayer(player.getUniqueId()))) {
                 if (arena.getArenaMembers().size() >= arena.getMaxPlayers()) {
                     player.sendMessage(Messages.ARENA_IS_FULL);
+                } else {
+                    if (arena.getArenaMembers().isEmpty()) {
+                        setGameState(GameState.RECRUITING, arena);
+                    }
+                    //create new MMPlayer object
+                    plugin.getPlayerManager().addMMPlayer(player.getUniqueId());
+                    final MMPlayer mmPlayer = plugin.getPlayerManager().getMMPlayer(player.getUniqueId());
+
+                    arena.getArenaMembers().add(mmPlayer);
+
+                    // set scoreboard
+                    plugin.getScoreboard().lobbyScoreboard(player, arena);
+                    teleportToLobby(player, arena);
+                    giveLobbyInventory(player);
+
+                    arena.getArenaMembers().stream().filter(Objects::nonNull).forEach(arenaMembers -> {
+                        final Player arenaPlayers = Bukkit.getPlayer(arenaMembers.getUuid());
+                        plugin.getScoreboard().lobbyScoreboard(arenaPlayers, arena);
+                        arenaPlayers.sendMessage(Messages.PLAYER_JOINED_GAME.replace("{player}", player.getDisplayName()));
+                    });
+                    enoughPlayers(arena);
+                    player.sendMessage(Messages.JOINED_ARENA.replace("{arena}", arena.getName()));
                 }
-                //create new MMPlayer object
-                plugin.getPlayerManager().addMMPlayer(player.getUniqueId());
-                final MMPlayer mmPlayer = plugin.getPlayerManager().getMMPlayer(player.getUniqueId());
-
-                arena.getArenaMembers().add(mmPlayer);
-
-                // set scoreboard
-                plugin.getScoreboard().lobbyScoreboard(player, arena);
-                teleportToLobby(player, arena);
-                giveLobbyInventory(player);
-
-                arena.getArenaMembers().stream().filter(Objects::nonNull).forEach(arenaMembers -> {
-                    final Player arenaPlayers = Bukkit.getPlayer(arenaMembers.getUuid());
-                    plugin.getScoreboard().lobbyScoreboard(arenaPlayers, arena);
-                    arenaPlayers.sendMessage(Messages.PLAYER_JOINED_GAME.replace("{player}", player.getDisplayName()));
-                });
-                enoughPlayers(arena);
-                player.sendMessage(Messages.JOINED_ARENA.replace("{arena}", arena.getName()));
             } else player.sendMessage(Messages.ALREADY_IN_ARENA);
         }
     }

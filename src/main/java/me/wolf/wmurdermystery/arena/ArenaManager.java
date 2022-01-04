@@ -141,7 +141,6 @@ public class ArenaManager {
             arena.setNewDetectiveArrow(detectiveArrow);
 
             Bukkit.getLogger().info("&aLoaded arena &e" + arena.getName());
-            System.out.println("TEST + " + arena.getGameTimer());
 
         }
     }
